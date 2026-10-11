@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit AI - AI Video Editor</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            dark: '#0f172a',
+                            card: '#1e293b',
+                            primary: '#6366f1',
+                            accent: '#a855f7'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
+    </style>
+</head>
+<body class="bg-brand-dark text-slate-100 font-sans antialiased flex justify-center items-center min-h-screen p-0 m-0">
+
+    <!-- Container Mobile Wrapper (Maksimal lebar ala HP) -->
+    <div id="app-container" class="w-full max-w-md h-screen sm:h-[850px] sm:rounded-3xl sm:border sm:border-slate-800 bg-brand-dark flex flex-col relative overflow-hidden shadow-2xl">
+
+        <!-- 1. HALAMAN LOGIN / AUTH -->
+        <div id="screen-auth" class="absolute inset-0 z-50 bg-brand-dark flex flex-col justify-between p-6">
+            <div class="my-auto text-center space-y-6">
+                <div class="w-20 h-20 bg-gradient-to-tr from-brand-primary to-brand-accent rounded-3xl mx-auto flex items-center justify-center shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-wand-magic-sparkles text-3xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight">Edit <span class="text-indigo-400">AI</span></h1>
+                    <p class="text-slate-400 text-sm mt-2">Edit video profesional secara instan dengan kecerdasan buatan.</p>
+                </div>
+                <div class="space-y-3 pt-4">
+                    <button onclick="handleLogin('Google')" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-medium flex items-center justify-center gap-3 transition">
+                        <i class="fa-brands fa-google text-red-400"><span>Masuk dengan Google</span></i>
+                    </button>
+                    <button onclick="handleLogin('Facebook')" class="w-full py-3 px-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl font-medium flex items-center justify-center gap-3 transition">
+                        <i class="fa-brands fa-facebook text-blue-400"><span>Masuk dengan Facebook</span></i>
+                    </button>
+                    <button onclick="handleLogin('Guest')" class="w-full py-3 px-4 bg-transparent hover:bg-slate-800/50 text-slate-400 hover:text-white rounded-xl font-medium transition text-sm">
+                        Masuk sebagai Tamu (Guest)
+                    </button>
+                </div>
+            </div>
+            <div class="text-center text-xs text-slate-500">
+                100% Gratis &bull; Didukung AI Engine
+            </div>
+        </div>
+
+        <!-- 2. HALAMAN UTAMA / DASHBOARD & EDITOR -->
+        <div id="screen-dashboard" class="flex-1 flex flex-col hidden overflow-y-auto">
+            <!-- Header -->
+            <header class="px-5 py-4 flex items-center justify-between border-b border-slate-800 bg-brand-dark/80 backdrop-blur sticky top-0 z-20">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-wand-magic-sparkles text-sm text-white"></i>
+                    </div>
+                    <span class="font-bold text-lg">Edit AI</span>
+                </div>
+                <div class="flex items-center gap-3">
+                    <span class="text-xs bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded-full font-medium border border-indigo-500/30">Free Plan</span>
+                    <button onclick="openProfile()" class="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-slate-300">
+                        <i class="fa-solid fa-user text-xs"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <div class="p-5 space-y-5 flex-1">
+                <!-- Upload Box -->
+                <div id="upload-section" class="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-2xl p-6 text-center bg-brand-card/50 transition cursor-pointer relative" onclick="triggerUpload()">
+                    <input type="file" id="video-file-input" accept="video/*" class="hidden" onchange="handleVideoUpload(event)">
+                    <div class="w-12 h-12 bg-indigo-500/10 text-indigo-400 rounded-xl mx-auto flex items-center justify-center mb-3">
+                        <i class="fa-solid fa-cloud-arrow-up text-xl"></i>
+                    </div>
+                    <h3 class="font-semibold text-sm">Upload Video Anda</h3>
+                    <p class="text-xs text-slate-400 mt-1">Tap untuk memilih video dari galeri HP</p>
+                </div>
+
+                <!-- Preview Area (Hidden by default) -->
+                <div id="preview-section" class="hidden space-y-3">
+                    <div class="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
+                        <video id="video-preview" class="w-full h-full object-contain" controls></video>
+                        <div id="aspect-badge" class="absolute top-2 left-2 bg-black/60 backdrop-blur text-[10px] px-2 py-0.5 rounded font-mono text-slate-300">16:9</div>
+                    </div>
+                    <div class="flex justify-between items-center px-1">
+                        <span id="file-name-label" class="text-xs text-slate-400 truncate max-w-[200px]">video_source.mp4</span>
+                        <button onclick="resetUpload()" class="text-xs text-red-400 hover:underline">Ganti Video</button>
+                    </div>
+                </div>
+
+                <!-- Format Rasio -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Format Rasio</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="setAspect('9:16', this)" class="aspect-btn py-2 px-3 bg-brand-card hover:bg-slate-700 border border-slate-700/80 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition active">
+                            <i class="fa-solid fa-mobile-screen"></i> 9:16 (Shorts)
+                        </button>
+                        <button onclick="setAspect('16:9', this)" class="aspect-btn py-2 px-3 bg-brand-card hover:bg-slate-700 border border-slate-700/80 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-desktop"></i> 16:9 (YouTube)
+                        </button>
+                        <button onclick="setAspect('1:1', this)" class="aspect-btn py-2 px-3 bg-brand-card hover:bg-slate-700 border border-slate-700/80 rounded-xl text-xs font-medium flex items-center justify-center gap-2 transition">
+                            <i class="fa-solid fa-square"></i> 1:1 (Feed)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Smart Preset Cepat -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Preset Gaya AI</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="selectPreset('Football Highlight')" class="preset-btn p-3 bg-brand-card hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-futbol text-sm"></i></div>
+                            <div>
+                                <div class="text-xs font-bold">Football Highlight</div>
+                                <div class="text-[10px] text-slate-400">Zoom gol &amp; slow-mo</div>
+                            </div>
+                        </button>
+                        <button onclick="selectPreset('Cinematic')" class="preset-btn p-3 bg-brand-card hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center"><i class="fa-solid fa-film text-sm"></i></div>
+                            <div>
+                                <div class="text-xs font-bold">Cinematic</div>
+                                <div class="text-[10px] text-slate-400">Grade warna film</div>
+                            </div>
+                        </button>
+                        <button onclick="selectPreset('Gaming')" class="preset-btn p-3 bg-brand-card hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center"><i class="fa-solid fa-gamepad text-sm"></i></div>
+                            <div>
+                                <div class="text-xs font-bold">Gaming</div>
+                                <div class="text-[10px] text-slate-400">Kill montage &amp; beat</div>
+                            </div>
+                        </button>
+                        <button onclick="selectPreset('Vlog')" class="preset-btn p-3 bg-brand-card hover:bg-slate-700 border border-slate-700 rounded-xl text-left transition flex items-center gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center"><i class="fa-solid fa-camera text-sm"></i></div>
+                            <div>
+                                <div class="text-xs font-bold">Vlog</div>
+                                <div class="text-[10px] text-slate-400">Auto cut &amp; subtitle</div>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Fitur Otomatis Toggles -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fitur AI Pintar</label>
+                    <div class="bg-brand-card border border-slate-700 rounded-xl p-3 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs"><i class="fa-solid fa-scissors text-indigo-400 w-4"></i> Smart Cut (Hapus Hening)</div>
+                            <input type="checkbox" id="feat-smartcut" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs"><i class="fa-solid fa-palette text-indigo-400 w-4"></i> Auto Color Grading</div>
+                            <input type="checkbox" id="feat-autocolor" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs"><i class="fa-solid fa-closed-captioning text-indigo-400 w-4"></i> Auto Subtitle Otomatis</div>
+                            <input type="checkbox" id="feat-autosub" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-xs"><i class="fa-solid fa-music text-indigo-400 w-4"></i> Beat Sync Musik</div>
+                            <input type="checkbox" id="feat-beatsync" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tambah Audio MP3 -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Musik &amp; Audio MP3</label>
+                    <div class="flex items-center gap-2 bg-brand-card border border-slate-700 rounded-xl p-3">
+                        <div class="flex-1 truncate text-xs text-slate-300" id="audio-file-label">Pilih lagu latar belakang (MP3)...</div>
+                        <input type="file" id="audio-file-input" accept="audio/mp3,audio/*" class="hidden" onchange="handleAudioUpload(event)">
+                        <button onclick="document.getElementById('audio-file-input').click()" class="bg-slate-700 hover:bg-slate-600 px-3 py-1.5 rounded-lg text-xs font-medium transition">Cari MP3</button>
+                    </div>
+                </div>
+
+                <!-- Perintah AI Bahasa Natural -->
+                <div class="space-y-2">
+                    <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Perintah AI (Natural Language)</label>
+                    <div class="relative">
+                        <textarea id="ai-prompt-input" rows="2" class="w-full bg-brand-card border border-slate-700 rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500 resize-none text-slate-100 placeholder-slate-500" placeholder="Contoh: Buatkan video dengan transisi cepat, teks subtitle kuning tebal di tengah, dan sesuaikan ketukan drop beat..."></textarea>
+                        <div class="absolute bottom-2 right-2 text-[10px] text-slate-500">Gratis &amp; Unlimited</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Action Button -->
+            <div class="p-5 border-t border-slate-800 bg-brand-dark/80 backdrop-blur sticky bottom-0 z-20">
+                <button onclick="startAIGeneration()" class="w-full py-3.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 rounded-xl font-bold text-sm shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition active:scale-[0.98]">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Proses Edit dengan AI
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. HALAMAN PROGRESS AI -->
+        <div id="screen-progress" class="absolute inset-0 z-40 bg-brand-dark flex flex-col justify-center items-center p-6 hidden text-center">
+            <div class="w-24 h-24 relative flex items-center justify-center mb-6">
+                <div class="absolute inset-0 border-4 border-indigo-500/20 rounded-full"></div>
+                <div class="absolute inset-0 border-4 border-indigo-500 rounded-full animate-spin border-t-transparent"></div>
+                <i class="fa-solid fa-brain text-2xl text-indigo-400"></i>
+            </div>
+            <h2 id="progress-title" class="text-lg font-bold">Menganalisis Video...</h2>
+            <p id="progress-desc" class="text-xs text-slate-40
